@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.1
+// @version      0.2
 // @author       Leo Verto
 // @include      *
 // @grant        GM.xmlHttpRequest
@@ -29,7 +29,10 @@ function getAnswers() {
 function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
+        //checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
+        for (let note of notes) {
+            checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
+        }
     }
 }
 
