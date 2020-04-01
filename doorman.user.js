@@ -5,7 +5,12 @@
 // @author       Leo Verto
 // @include      *
 // @grant        GM.xmlHttpRequest
+// @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
 // ==/UserScript==
+
+function addText(note, text) {
+    note.appendChild(document.createTextNode(text));
+}
 
 function getAnswers() {
     var notes = document.getElementsByTagName("gremlin-note");
@@ -16,21 +21,46 @@ function getAnswers() {
             var aid = note.getAttribute("id");
             var answer = note.getAttribute("aria-label").substr(19);
             answers[aid] = answer;
-            checkDetector(answer, function(percentage) { return addPercentage(note, percentage); });
         }
         return answers;
     }
 }
 
-function addPercentage(note, percentage) {
-    //var icon = document.createElement("g-icon");
-    //icon.setAttribute("role", "presentation");
-    //icon.appendChild(document.createTextNode(percentage));
-    //note.appendChild(icon);
-    note.appendChild(document.createTextNode(percentage));
+function processAnswers(answers) {
+    var notes = document.getElementsByTagName("gremlin-note");
+    if (notes.length > 0) {
+        checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
+    }
 }
 
-function checkDetector(answer, callback) {
+function handleExisting(notes, results) {
+    var i = 0;
+    for (let note of notes) {
+        if (results[i] === "unknown") {
+            // Send previously unseen answers to detector
+            checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
+        } else {
+            // Otherwise add result to note
+            addText(note, results[i]);
+        }
+        i++;
+    }
+}
+
+function checkExisting(ids, callback) {
+    var requestOptions = {
+        method: 'GET',
+        redirect: 'follow'
+      };
+      fetch("https://librarian.abra.me/check?ids="+ids.join(","), requestOptions)
+        .then(response => response.json())
+        .then(result => callback(result.results))
+        .catch(error => console.log('error', error));
+}
+
+function checkDetector(note, callback) {
+    var answer = note.getAttribute("aria-label").substr(19);
+
     var requestOptions = {
         method: 'GET',
         redirect: 'follow'
@@ -56,7 +86,9 @@ function handleGremlinAction(e) {
 }
 
 function run() {
-    console.log(getAnswers());
+    var answers = getAnswers();
+    console.log(answers);
+    processAnswers(answers);
     var app = document.getElementsByTagName("gremlin-app")[0];
     if (app) {
         app.addEventListener("gremlin-action", handleGremlinAction);
