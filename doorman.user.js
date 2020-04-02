@@ -4,7 +4,9 @@
 // @version      1.0
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
-// @grant        GM.xmlHttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
 // @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.0
 // ==/UserScript==
@@ -49,34 +51,52 @@ function getAnswers() {
 }
 
 async function processAnswers(answers) {
-    var notes = document.getElementsByTagName("gremlin-note");
+    let notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        let results = await checkExistingAbra(Object.values(answers.map(x => x.msg)))
-                                .catch(error => console.log('error', error));
+        let abra = await checkExistingAbra(Object.values(answers.map(x => x.msg)))
+                             .catch(error => console.log('error', error));
+
+        let promises = [];
         for (let i = 0; i < notes.length; i++) {
             // Handle results from own db
-            console.log(results[i]);
-            if (results[i] !== "unknown") {
-                await handleExisting(notes[i], results[i], "abra.me, own db");
-                continue;
+            if (abra[i] !== "unknown") {
+                promises.append(handleExisting(notes[i], abra[i], "abra.me, own db"));
             }
 
             // Check if the message is a backronym
-            checkBackronym(answers[i].msg)
-                .then(handleExisting(notes[i], "", "spells HUMAN"));
+            promises.push(checkBackronym(answers[i].msg)
+                              .then(handleExisting(notes[i], "", "spells HUMAN")));
 
             // Check spacescience.tech
-            checkExistingSpacescience(answers[i].id, false)
-                .then(result => handleExisting(notes[i], result, "spacescience.tech"));
+            promises.push(checkExistingSpacescience(answers[i].id, false)
+                              .then(result => handleExisting(notes[i], result, "spacescience.tech")));
 
             // Check ocean.rip
-            checkExistingOcean(answers[i].msg)
-                .then(result => handleExisting(notes[i], result, "ocean.rip"));
+            promises.push(checkExistingOcean(answers[i].msg)
+                              .then(result => handleExisting(notes[i], result, "ocean.rip")));
 
+        }
+
+        // Wait until all requests have been handled
+        await Promise.all(promises.map(p => p.catch(e => e)))
+            .catch(e => console.log(e));
+
+        let unknown_count = 0;
+        for (let note of notes) {
+            // If note hint is not set
+            if (!note.getElementsByClassName("doorman-hint")[0]) {
+                unknown_count++;
+            }
+        }
+
+        // Only check detector when there's more than one unknown answer left
+        if (unknown_count > 1){
             // Check detector
-            checkDetector(answers[i].msg)
-                .catch(error => console.log('error', error))
-                .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", true));
+            for (let i = 0; i < notes.length; i++) {
+                checkDetector(answers[i].msg)
+                    .catch(error => console.log('error', error))
+                    .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", true));
+            }
         }
     }
 }
@@ -140,7 +160,7 @@ async function submitResultsAbra(chosen_text, result, option_texts) {
 }
 
 async function submitResultsSpacescience(answer, result, options) {
-    let room =  {"options": options};
+    let room = {"options": options};
 
     let body = new FormData();
     body.append("answer", answer);
@@ -172,7 +192,6 @@ function handleGremlinAction(e) {
         default:
             console.log("default");
     }
-
 }
 
 function run() {
