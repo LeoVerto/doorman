@@ -12,6 +12,7 @@ const DETECTOR_URL = "https://detector.abra.me/?";
 const CHECK_URL = "https://librarian.abra.me/check";
 const SUBMIT_URL = "https://librarian.abra.me/submit";
 const SPACESCIENCE_URL = "https://spacescience.tech/check.php?id=";
+const OCEAN_URL = "https://wave.ocean.rip/answers/answer?text=";
 
 function setHint(note, text, overwriteable=false) {
     let hint = note.getElementsByClassName("doorman-hint")[0];
@@ -62,9 +63,13 @@ async function processAnswers(answers) {
                 continue;
             }
 
-            // Check https://spacescience.tech
+            // Check spacescience.tech
             checkExistingSpacescience(answers[i].id)
                 .then(result => handleExisting(notes[i], result, "spacescience.tech"));
+
+            // Check ocean.rip
+            checkExistingOcean(answers[i].msg)
+                .then(result => handleExisting(notes[i], result, "ocean.rip"));
 
             // Check detector
             checkDetector(answers[i].msg)
@@ -128,6 +133,28 @@ async function checkExistingSpacescience(id) {
             }
         }
     }
+    return "unknown";
+}
+
+async function checkExistingOcean(msg) {
+    let requestOptions = {
+        method: 'GET',
+        redirect: 'follow'
+    };
+
+    let json = await fetch(OCEAN_URL+msg, requestOptions)
+                         .then(response => response.json());
+
+    console.log(json);
+
+    if (json.status=200) {
+        if (json.answer.is_correct) {
+            return "known fake";
+        } else {
+            return "known human";
+        }
+    }
+
     return "unknown";
 }
 
