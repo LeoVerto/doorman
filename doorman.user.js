@@ -227,7 +227,7 @@ Toastify({
   backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
   stopOnFocus: false, // Prevents dismissing of toast on hover
 }).showToast();
-}, 1250)
+}, 4000)
 
 setInterval(() => {
     let curstatus = getStats();
@@ -241,4 +241,4 @@ Toastify({
   backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
   stopOnFocus: false, // Prevents dismissing of toast on hover
 }).showToast();
-}, 20000);
+}, 5000);
