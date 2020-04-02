@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.5
+// @version      0.6
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
@@ -11,9 +11,28 @@
 const DETECTOR_URL = "https://detector.abra.me/?";
 const CHECK_URL = "https://librarian.abra.me/check";
 const SUBMIT_URL = "https://librarian.abra.me/submit";
+const SPACESCIENCE_URL = "https://spacescience.tech/check.php?id=";
 
-function addText(note, text) {
-    note.appendChild(document.createTextNode(text));
+function setHint(note, text, overwriteable=false) {
+    let hint = note.getElementsByClassName("doorman-hint")[0];
+
+    // Hint tag does not already exist
+    if (!hint) {
+        hint = document.createElement("i");
+        hint.setAttribute("class", "doorman-hint");
+
+        // Set overwriteable attribute so we can check later
+        if (overwriteable) {
+            hint.setAttribute("overwriteable", "");
+        }
+
+        note.appendChild(hint);
+        hint.textContent = text;
+
+    // Only overwrite if previously set as overwriteable
+    } else if (hint.hasAttribute("overwriteable")) {
+        hint.textContent = text;
+    }
 }
 
 function getAnswers() {
@@ -22,9 +41,9 @@ function getAnswers() {
     if (notes) {
         var answers = [];
         for (let note of notes) {
-            var aid = note.getAttribute("id");
-            var answer = note.getAttribute("aria-label").substr(19);
-            answers[aid] = answer;
+            let id = note.getAttribute("id");
+            let msg = note.getAttribute("aria-label").substr(19);
+            answers.push({id: id, msg: msg});
         }
         return answers;
     }
@@ -36,26 +55,34 @@ async function processAnswers(answers) {
         let results = await checkExisting(Object.values(answers))
                                 .catch(error => console.log('error', error));
 
-        await handleExisting(notes, results);
+                                console.log(results);
+        for (let i = 0; i < notes.length; i++) {
+            // Handle results from own db
+            console.log(results[i]);
+            if (results[i] !== "unknown") {
+                await handleExisting(notes[i], results[i], "abra.me, own db");
+                continue;
+            }
+
+            // Check https://spacescience.tech
+            checkExistingSpacescience(answers[i].id)
+                .then(result => handleExisting(notes[i], result, "spacescience.tech"));
+
+            // Check detector
+            checkDetector(answers[i].msg)
+                .catch(error => console.log('error', error))
+                .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", true));
+        }
     }
 }
 
-async function handleExisting(notes, results) {
-    for (let i = 0; i < notes.length; i++) {
-        let result = results[i];
-        let note = notes[i];
-        if (result === "unknown") {
-            // Send previously unseen answers to detector
-            let percentage = await checkDetector(note)
-                                       .catch(error => console.log('error', error));
-            addText(note, Math.round(Number(percentage)*100)+"% bot");
-        } else if (result === "known fake") {
-            addText(note, result);
-            note.setAttribute("style", "background-color: green;")
-        } else {
-            addText(note, result);
-            note.setAttribute("style", "background-color: darkred;")
-        }
+async function handleExisting(note, result, source) {
+    if (result === "known fake") {
+        setHint(note, result  + " (" + source + ")");
+        note.setAttribute("style", "background-color: green;")
+    } else if (result === "known human") {
+        setHint(note, result + " (" + source + ")");
+        note.setAttribute("style", "background-color: darkred;")
     }
 }
 
@@ -77,15 +104,42 @@ async function checkExisting(msgs) {
     return json.results;
 }
 
-async function checkDetector(note) {
-    let answer = note.getAttribute("aria-label").substr(19);
+async function checkExistingSpacescience(id) {
+    let requestOptions = {
+        method: 'GET',
+        redirect: 'follow'
+    };
 
+    let json = await fetch(SPACESCIENCE_URL+id, requestOptions)
+                         .then(response => response.json());
+
+    console.log(json);
+
+    for (key in json) {
+        if (json[key].hasOwnProperty("flag")) {
+            if (json[key].flag = 1) {
+                console.log(json[key]);
+                switch(json[key].result) {
+                    /*case "WIN":
+                        return "known fake";
+                        Known bot data is completely unrealiable.
+                    */
+                    case "LOSE":
+                        return "known human";
+                }
+            }
+        }
+    }
+    return "unknown";
+}
+
+async function checkDetector(msg) {
     let requestOptions = {
         method: 'GET',
         redirect: 'follow'
     };
       
-    let json = await fetch(DETECTOR_URL + answer, requestOptions)
+    let json = await fetch(DETECTOR_URL + msg, requestOptions)
                          .then(response => response.json());
     return json.fake_probability;
         
