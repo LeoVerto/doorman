@@ -1,5 +1,6 @@
 # Doorman
-Doorman is a userscript to assist you in detecting the imposter in Reddit's 2020 April Fools' event!
+Doorman is a userscript to assist you in detecting the imposter in Reddit's
+[2020 April Fools' event](https://new.reddit.com/r/Imposter)!
 
 It first tries to look up answers in a database that has been built in a collaboration
 between [@abra0](https://github.com/Abrackadabra) and [@JRWR](https://github.com/JRWR)
