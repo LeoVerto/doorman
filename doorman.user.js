@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.7
+// @version      0.8
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
