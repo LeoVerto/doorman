@@ -21,3 +21,9 @@ on how to install a userscript extension for your browser.
 
 Once that's done, opening the raw script file should prompt you to install it:
 [https://github.com/LeoVerto/doorman/raw/master/doorman.user.js](https://github.com/LeoVerto/doorman/raw/master/doorman.user.js)
+
+## Contributors
+* [@abra0](https://github.com/Abrackadabra) Built the backend for the bot and generously hosted the detector API.
+* [@JRWR](https://github.com/JRWR) Built the massive [spacescience.tech](https://spacescience.tech) database.
+* [ocean.rip](https://ocean.rip) Collected huge amounts of data in their own database.
+* [@wherron01](https://github.com/wherron01) Fixed the userscript being executed on all websites.
