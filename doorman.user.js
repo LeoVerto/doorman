@@ -30,19 +30,22 @@ function getAnswers() {
     }
 }
 
-function processAnswers(answers) {
+async function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
+        var result = await checkExisting(Object.keys(answers));
+        handleExisting(notes, result);
     }
 }
 
-function handleExisting(notes, results) {
+async function handleExisting(notes, results) {
+    console.log("results: ", results);
     var i = 0;
     for (let note of notes) {
         if (results[i] === "unknown") {
             // Send previously unseen answers to detector
-            checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
+            var percentage = await checkDetector(note);
+            addText(note, Math.round(Number(percentage)*100)+"% bot");
         } else {
             // Otherwise add result to note
             addText(note, results[i]);
@@ -51,7 +54,7 @@ function handleExisting(notes, results) {
     }
 }
 
-function checkExisting(msgs, callback) {
+async function checkExisting(msgs) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
@@ -64,13 +67,12 @@ function checkExisting(msgs, callback) {
         redirect: 'follow'
     };
 
-    fetch(CHECK_URL, requestOptions)
-        .then(response => response.json())
-        .then(result => callback(result.results))
-        .catch(error => console.log('error', error));
+    var response = await fetch(CHECK_URL, requestOptions);
+    var result = await response.json();
+    return result.results;
 }
 
-function checkDetector(note, callback) {
+async function checkDetector(note, callback) {
     var answer = note.getAttribute("aria-label").substr(19);
 
     var requestOptions = {
@@ -78,13 +80,12 @@ function checkDetector(note, callback) {
         redirect: 'follow'
     };
       
-    fetch(DETECTOR_URL + answer, requestOptions)
-        .then(response => response.json())
-        .then(result => callback(result.fake_probability))
-        .catch(error => console.log('error', error));
+    var response = await fetch(DETECTOR_URL + answer, requestOptions);
+    var result = await response.json();
+    return result.fake_probability;
 }
 
-function submitResults() {
+async function submitResults() {
     var notes = document.getElementsByTagName("gremlin-note");
 
     if (notes) {
@@ -117,10 +118,10 @@ function submitResults() {
         };
 
         console.log("Submitting results");
-        fetch(SUBMIT_URL, requestOptions)
-            .then(response => response.text())
-            .then(result => console.log(result))
-            .catch(error => console.log('error', error));
+        
+        var response = await fetch(SUBMIT_URL, requestOptions);
+        var result = await response.text();
+        console.log(result);
         }
 }
 
@@ -144,7 +145,7 @@ function handleGremlinAction(e) {
     
 }
 
-function run() {
+async function run() {
     var app = document.getElementsByTagName("gremlin-app")[0];
     if (app) {
         var answers = getAnswers();
