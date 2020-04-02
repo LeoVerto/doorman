@@ -135,7 +135,6 @@ var imported = document.createElement('script');
 imported.src = 'https://cdn.jsdelivr.net/npm/toastify-js';
 document.head.appendChild(imported);
 
-
 async function getRoom() {
     let res = await (await fetch("https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop")).text();
     let parser = new DOMParser();
@@ -146,6 +145,7 @@ async function getRoom() {
         options: Array.from(doc.getElementsByTagName("gremlin-note")).map(e => [e.id, e.innerText])
     };
 };
+
 async function submitAnswer(token, id) {
     let body = new FormData();
     body.append("undefined", "undefined");
@@ -172,6 +172,7 @@ async function submitAnswerToDB(answer, result, room) {
     
     return JSON.parse(res);
 }
+
 function getStats() {
     console.log(wins);
     return `All: ${wins.length+loses.length}
@@ -182,14 +183,29 @@ Loses: ${loses.length} (${((loses.length/(wins.length+loses.length))*100).toFixe
 
 async function play() {
     let room = await getRoom();
-    let answer = 0, found = false;
-    room.options.forEach((o, i) => { 
-        if(!found && !o[1].startsWith("i") && !o[1].endsWith("?")) {
-            found = true;
-            answer = i;
+    let answers = room.options.flatMap(x => x[0]);
+    var results = await checkExisting(answers);
+
+    for (var i = 0; i < results.length; i++) {
+        if (results[i] == "unknown") {
+            var percentage = await checkDetectorAnswerTXT(room.options[i][1]);
+            results[i] = Math.round(Number(percentage)*100);
+        } else if (results[i] == "known fake") {
+            results[i] = 100;
         }
-    });
+    }
+
+    let answer = 0;
+    let maxBot = 0;
+    for (var i = 0; i < results.length; i++) {
+        if (results[i] > maxBot) {
+            answer = i;
+            maxBot = results[i];
+        }
+    }
+
     let result = await submitAnswer(room.token, room.options[answer][0]);
+    let _ = submitResultsFetch(room.options[answer][1], room.options.flatMap(x => x[1].trim()), result.result)
 
     return [room.options[answer][1], result.result, room];
 };
@@ -211,8 +227,8 @@ Toastify({
   backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
   stopOnFocus: false, // Prevents dismissing of toast on hover
 }).showToast();
-
 }, 1250)
+
 setInterval(() => {
     let curstatus = getStats();
 Toastify({
