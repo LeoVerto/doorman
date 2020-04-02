@@ -3,7 +3,7 @@
 // @namespace    https://leoverto.github.io
 // @version      0.5
 // @author       Leo Verto
-// @include      *
+// @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
 // ==/UserScript==
@@ -159,7 +159,5 @@ function run() {
 }
 
 (function() {
-    if (window.location.hostname === "gremlins-api.reddit.com") {
-        setTimeout(run, 100);
-    }
+    setTimeout(run, 100);
 })();
