@@ -1,13 +1,10 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
-// @namespace    https://qqii.github.io
-// @version      0.0.1
-// @author       qqii
-// @include      *
+// @namespace    https://leoverto.github.io
+// @version      0.5
+// @author       Leo Verto
+// @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
-// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop
-// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop*
-// @match        https://gremlins-api.reddit.com/results?*
 // ==/UserScript==
 
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
