@@ -119,10 +119,10 @@ async function submitResultsFetch(chosen_text, option_texts, result) {
         redirect: 'follow'
     };
 
-    console.log("Submitting results");
+    // console.log("Submitting results");
     
     var response = await fetch(SUBMIT_URL, requestOptions);
-    console.log(await response.text());
+    // console.log(await response.text());
 }
 
 // imposterbot.user.js
