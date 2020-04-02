@@ -1,12 +1,16 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
-// @namespace    https://leoverto.github.io
-// @version      0.5
-// @author       Leo Verto
+// @namespace    https://qqii.github.io
+// @version      0.0.1
+// @author       qqii
 // @include      *
 // @grant        GM.xmlHttpRequest
-// @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
+// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop
+// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop*
+// @match        https://gremlins-api.reddit.com/results?*
 // ==/UserScript==
+
+// @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
 
 const DETECTOR_URL = "https://detector.abra.me/?";
 const CHECK_URL = "https://librarian.abra.me/check";
@@ -121,17 +125,7 @@ async function submitResultsFetch(chosen_text, option_texts, result) {
     console.log(await response.text());
 }
 
-// ==UserScript==
-// @name         Reddit April Fools Imposter Bot
-// @namespace    jrwr.io
-// @version      1.0.4
-// @description  A bot that randomly chooses a entry and reports back to a central database at spacescience.tech
-// @author       dimden updated by jrwr
-// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop
-// @match        https://gremlins-api.reddit.com/room?nightmode=1&platform=desktop*
-// @match        https://gremlins-api.reddit.com/results?*
-
-// ==/UserScript==
+// imposterbot.user.js
 
 document.getElementsByTagName("head")[0].insertAdjacentHTML(
     "beforeend",
@@ -164,6 +158,28 @@ async function submitAnswer(token, id) {
 
     return JSON.parse(res);
 }
+
+async function submitAnswerToDB(answer, result, room) {
+    let body = new FormData();
+    delete room.token;
+    body.append("answer", answer);
+    body.append("result", result);
+    body.append("room", JSON.stringify(room));
+    let res = await (await fetch("https://spacescience.tech/api.php", {
+        method: "post",
+        body
+    })).text();
+    
+    return JSON.parse(res);
+}
+function getStats() {
+    console.log(wins);
+    return `All: ${wins.length+loses.length}
+Wins: ${wins.length} (${((wins.length/(wins.length+loses.length))*100).toFixed(1)}%)
+Loses: ${loses.length} (${((loses.length/(wins.length+loses.length))*100).toFixed(1)}%)
+`;
+}
+
 async function play() {
     let room = await getRoom();
     let answer = 0, found = false;
@@ -177,27 +193,6 @@ async function play() {
 
     return [room.options[answer][1], result.result, room];
 };
-
-async function submitAnswerToDB(answer, result, room) {
-    let body = new FormData();
-    delete room.token;
-    body.append("answer", answer);
-    body.append("result", result);
-    body.append("room", JSON.stringify(room));
-    let res = await (await fetch("https://spacescience.tech/api.php", {
-        method: "post",
-        body
-    })).text();
-
-    return JSON.parse(res);
-}
-function getStats() {
-    console.log(wins);
-    return `All: ${wins.length+loses.length}
-Wins: ${wins.length} (${((wins.length/(wins.length+loses.length))*100).toFixed(1)}%)
-Loses: ${loses.length} (${((loses.length/(wins.length+loses.length))*100).toFixed(1)}%)
-`;
-}
 
 window.wins = []; window.loses = [];
 setInterval(async () => {
