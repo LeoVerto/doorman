@@ -16,7 +16,7 @@ async function checkExistingAbra(msgs) {
         redirect: 'follow'
     };
 
-    let json = await fetch(CHECK_URL, requestOptions)
+    let json = await fetch(ABRA_URL, requestOptions)
                          .then(response => response.json());
     return json.results;
 }
