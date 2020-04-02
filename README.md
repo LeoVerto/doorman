@@ -1,10 +1,12 @@
 # Doorman
-Doorman is a userscript to assist you in detecting the imposter in Reddit's
+Doorman is a userscript to help you keep the imposters out in Reddit's
 [2020 April Fools' event](https://new.reddit.com/r/Imposter)!
 
 It first tries to look up answers in a database that has been built in a collaboration
 between [@abra0](https://github.com/Abrackadabra) and [@JRWR](https://github.com/JRWR)
 and fed hundreds of thousands of answers by countless redditors.
+
+As another data source, it checks against the database of [The Ocean](https://ocean.rip).
 
 If that lookup fails, doorman falls back to [@abra0](https://github.com/Abrackadabra)'s
 [GPT-2 output detector](https://detector.abra.me) and displays a guess whether the answers was written
