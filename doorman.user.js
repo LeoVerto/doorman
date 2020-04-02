@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.6
+// @version      0.7
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
@@ -52,10 +52,8 @@ function getAnswers() {
 async function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        let results = await checkExisting(Object.values(answers))
+        let results = await checkExisting(Object.values(answers.map(x => x.msg)))
                                 .catch(error => console.log('error', error));
-
-                                console.log(results);
         for (let i = 0; i < notes.length; i++) {
             // Handle results from own db
             console.log(results[i]);
