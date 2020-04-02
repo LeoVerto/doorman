@@ -12,24 +12,6 @@ const DETECTOR_URL = "https://detector.abra.me/?";
 const CHECK_URL = "https://librarian.abra.me/check";
 const SUBMIT_URL = "https://librarian.abra.me/submit";
 
-function addText(note, text) {
-    note.appendChild(document.createTextNode(text));
-}
-
-function getAnswers() {
-    var notes = document.getElementsByTagName("gremlin-note");
-
-    if (notes) {
-        var answers = [];
-        for (let note of notes) {
-            var aid = note.getAttribute("id");
-            var answer = note.getAttribute("aria-label").substr(19);
-            answers[aid] = answer;
-        }
-        return answers;
-    }
-}
-
 async function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
@@ -138,39 +120,3 @@ async function submitResultsFetch(chosen_text, option_texts, result) {
     var response = await fetch(SUBMIT_URL, requestOptions);
     console.log(await response.text());
 }
-
-function handleGremlinAction(e) {
-    const type = e.detail.type;
-    console.log(type);
-    switch (type) {
-        case "begin":
-            console.log("begin");
-            break;
-        case "link":
-            // We don't want to handle this when a new round is started
-            if (!window.location.href.startsWith("https://gremlins-api.reddit.com/results")) {
-                console.log("Submitting results in 250ms");
-                setTimeout(submitResults, 250);
-            }
-            break;
-        default:
-            console.log("default");
-    }
-    
-}
-
-async function run() {
-    var app = document.getElementsByTagName("gremlin-app")[0];
-    if (app) {
-        var answers = getAnswers();
-        console.log(answers);
-        processAnswers(answers);
-        app.addEventListener("gremlin-action", handleGremlinAction);
-    }
-}
-
-(function() {
-    if (window.location.hostname === "gremlins-api.reddit.com") {
-        setTimeout(run, 100);
-    }
-})();
