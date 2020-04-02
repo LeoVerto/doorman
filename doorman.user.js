@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.4
+// @version      0.5
 // @author       Leo Verto
 // @include      *
 // @grant        GM.xmlHttpRequest
@@ -33,19 +33,23 @@ function getAnswers() {
 function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
+        checkExisting(Object.values(answers), function(result) { return handleExisting(notes, result)});
     }
 }
 
 function handleExisting(notes, results) {
     var i = 0;
     for (let note of notes) {
+        var result = results[i];
         if (results[i] === "unknown") {
             // Send previously unseen answers to detector
             checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
+        } else if (result === "known fake") {
+            addText(note, result);
+            note.setAttribute("style", "background-color: green;")
         } else {
-            // Otherwise add result to note
-            addText(note, results[i]);
+            addText(note, result);
+            note.setAttribute("style", "background-color: darkred;")
         }
         i++;
     }
