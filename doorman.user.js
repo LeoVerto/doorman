@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.2
+// @version      0.3
 // @author       Leo Verto
 // @include      *
 // @grant        GM.xmlHttpRequest
@@ -29,10 +29,7 @@ function getAnswers() {
 function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        //checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
-        for (let note of notes) {
-            checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
-        }
+        checkExisting(Object.keys(answers), function(result) { return handleExisting(notes, result)});
     }
 }
 
@@ -50,12 +47,21 @@ function handleExisting(notes, results) {
     }
 }
 
-function checkExisting(ids, callback) {
+function checkExisting(msgs, callback) {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({"texts": msgs});
+    console.log(raw);
+
     var requestOptions = {
-        method: 'GET',
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
         redirect: 'follow'
-      };
-      fetch("https://librarian.abra.me/check?ids="+ids.join(","), requestOptions)
+    };
+
+    fetch("https://librarian.abra.me/check", requestOptions)
         .then(response => response.json())
         .then(result => callback(result.results))
         .catch(error => console.log('error', error));
@@ -67,9 +73,9 @@ function checkDetector(note, callback) {
     var requestOptions = {
         method: 'GET',
         redirect: 'follow'
-      };
+    };
       
-      fetch("https://detector.abra.me/?" + answer, requestOptions)
+    fetch("https://detector.abra.me/?" + answer, requestOptions)
         .then(response => response.json())
         .then(result => callback(result.fake_probability))
         .catch(error => console.log('error', error));
