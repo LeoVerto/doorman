@@ -159,7 +159,5 @@ function run() {
 }
 
 (function() {
-    if (window.location.hostname === "gremlins-api.reddit.com") {
-        setTimeout(run, 100);
-    }
+    setTimeout(run, 100);
 })();
