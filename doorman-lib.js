@@ -3,6 +3,10 @@ const ABRA_URL = "https://librarian.abra.me/check";
 const SPACESCIENCE_URL = "https://spacescience.tech/check.php?id=";
 const OCEAN_URL = "https://wave.ocean.rip/answers/answer?text=";
 
+function checkBackcronym(msg) {
+    return msg.split(" ").map(x => x.charAt(0)).join("").startsWith("human");
+}
+
 async function checkExistingAbra(msgs) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
