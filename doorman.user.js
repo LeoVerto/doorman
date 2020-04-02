@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.0
+// @version      1.1
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.0
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.1
 // ==/UserScript==
 
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
@@ -88,6 +88,7 @@ async function processAnswers(answers) {
                 unknown_count++;
             }
         }
+        console.log(unknown_count + " unknown answers left.");
 
         // Only check detector when there's more than one unknown answer left
         if (unknown_count > 1){
