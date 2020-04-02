@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.8
+// @version      0.9
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=0.8
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=0.9
 // ==/UserScript==
 
 const SUBMIT_URL = "https://librarian.abra.me/submit";

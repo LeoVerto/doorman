@@ -32,7 +32,7 @@ async function checkExistingSpacescience(id) {
 
     console.log(json);
 
-    for (key in json) {
+    for (let key in json) {
         if (json[key].hasOwnProperty("flag")) {
             if (json[key].flag = 1) {
                 console.log(json[key]);
