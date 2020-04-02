@@ -30,20 +30,25 @@ function getAnswers() {
     }
 }
 
-function processAnswers(answers) {
+async function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        checkExisting(Object.values(answers), function(result) { return handleExisting(notes, result)});
+        let results = await checkExisting(Object.values(answers))
+                                .catch(error => console.log('error', error));
+
+        await handleExisting(notes, results);
     }
 }
 
-function handleExisting(notes, results) {
-    var i = 0;
-    for (let note of notes) {
-        var result = results[i];
-        if (results[i] === "unknown") {
+async function handleExisting(notes, results) {
+    for (let i = 0; i < notes.length; i++) {
+        let result = results[i];
+        let note = notes[i];
+        if (result === "unknown") {
             // Send previously unseen answers to detector
-            checkDetector(note, function(percentage) { return addText(note, Math.round(Number(percentage)*100)+"% bot"); });
+            let percentage = await checkDetector(note)
+                                       .catch(error => console.log('error', error));
+            addText(note, Math.round(Number(percentage)*100)+"% bot");
         } else if (result === "known fake") {
             addText(note, result);
             note.setAttribute("style", "background-color: green;")
@@ -51,41 +56,39 @@ function handleExisting(notes, results) {
             addText(note, result);
             note.setAttribute("style", "background-color: darkred;")
         }
-        i++;
     }
 }
 
-function checkExisting(msgs, callback) {
+async function checkExisting(msgs) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
-    var raw = JSON.stringify({"texts": msgs});
+    let raw = JSON.stringify({"texts": msgs});
 
-    var requestOptions = {
+    let requestOptions = {
         method: 'POST',
         headers: myHeaders,
         body: raw,
         redirect: 'follow'
     };
 
-    fetch(CHECK_URL, requestOptions)
-        .then(response => response.json())
-        .then(result => callback(result.results))
-        .catch(error => console.log('error', error));
+    let json = await fetch(CHECK_URL, requestOptions)
+                         .then(response => response.json());
+    return json.results;
 }
 
-function checkDetector(note, callback) {
-    var answer = note.getAttribute("aria-label").substr(19);
+async function checkDetector(note) {
+    let answer = note.getAttribute("aria-label").substr(19);
 
-    var requestOptions = {
+    let requestOptions = {
         method: 'GET',
         redirect: 'follow'
     };
       
-    fetch(DETECTOR_URL + answer, requestOptions)
-        .then(response => response.json())
-        .then(result => callback(result.fake_probability))
-        .catch(error => console.log('error', error));
+    let json = await fetch(DETECTOR_URL + answer, requestOptions)
+                         .then(response => response.json());
+    return json.fake_probability;
+        
 }
 
 function submitResults() {
@@ -145,7 +148,7 @@ function handleGremlinAction(e) {
         default:
             console.log("default");
     }
-    
+
 }
 
 function run() {
