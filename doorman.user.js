@@ -6,13 +6,10 @@
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=0.8
 // ==/UserScript==
 
-const DETECTOR_URL = "https://detector.abra.me/?";
-const CHECK_URL = "https://librarian.abra.me/check";
 const SUBMIT_URL = "https://librarian.abra.me/submit";
-const SPACESCIENCE_URL = "https://spacescience.tech/check.php?id=";
-const OCEAN_URL = "https://wave.ocean.rip/answers/answer?text=";
 
 function setHint(note, text, overwriteable=false) {
     let hint = note.getElementsByClassName("doorman-hint")[0];
@@ -53,7 +50,7 @@ function getAnswers() {
 async function processAnswers(answers) {
     var notes = document.getElementsByTagName("gremlin-note");
     if (notes.length > 0) {
-        let results = await checkExisting(Object.values(answers.map(x => x.msg)))
+        let results = await checkExistingAbra(Object.values(answers.map(x => x.msg)))
                                 .catch(error => console.log('error', error));
         for (let i = 0; i < notes.length; i++) {
             // Handle results from own db
@@ -87,87 +84,6 @@ async function handleExisting(note, result, source) {
         setHint(note, result + " (" + source + ")");
         note.setAttribute("style", "background-color: darkred;")
     }
-}
-
-async function checkExisting(msgs) {
-    var myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-
-    let raw = JSON.stringify({"texts": msgs});
-
-    let requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-    };
-
-    let json = await fetch(CHECK_URL, requestOptions)
-                         .then(response => response.json());
-    return json.results;
-}
-
-async function checkExistingSpacescience(id) {
-    let requestOptions = {
-        method: 'GET',
-        redirect: 'follow'
-    };
-
-    let json = await fetch(SPACESCIENCE_URL+id, requestOptions)
-                         .then(response => response.json());
-
-    console.log(json);
-
-    for (key in json) {
-        if (json[key].hasOwnProperty("flag")) {
-            if (json[key].flag = 1) {
-                console.log(json[key]);
-                switch(json[key].result) {
-                    /*case "WIN":
-                        return "known fake";
-                        Known bot data is completely unrealiable.
-                    */
-                    case "LOSE":
-                        return "known human";
-                }
-            }
-        }
-    }
-    return "unknown";
-}
-
-async function checkExistingOcean(msg) {
-    let requestOptions = {
-        method: 'GET',
-        redirect: 'follow'
-    };
-
-    let json = await fetch(OCEAN_URL+msg, requestOptions)
-                         .then(response => response.json());
-
-    console.log(json);
-
-    if (json.status=200) {
-        if (json.answer.is_correct) {
-            return "known fake";
-        } else {
-            return "known human";
-        }
-    }
-
-    return "unknown";
-}
-
-async function checkDetector(msg) {
-    let requestOptions = {
-        method: 'GET',
-        redirect: 'follow'
-    };
-      
-    let json = await fetch(DETECTOR_URL + msg, requestOptions)
-                         .then(response => response.json());
-    return json.fake_probability;
-        
 }
 
 function submitResults() {
