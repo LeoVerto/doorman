@@ -25,7 +25,7 @@ async function checkExistingAbra(msgs) {
     return json.results;
 }
 
-async function checkExistingSpacescience(id) {
+async function checkExistingSpacescience(id, strict=True) {
     let requestOptions = {
         method: 'GET',
         redirect: 'follow'
@@ -38,16 +38,10 @@ async function checkExistingSpacescience(id) {
 
     for (let key in json) {
         if (json[key].hasOwnProperty("flag")) {
-            if (json[key].flag = 1) {
-                console.log(json[key]);
-                switch(json[key].result) {
-                    /*case "WIN":
-                        return "known fake";
-                        Known bot data is completely unrealiable.
-                    */
-                    case "LOSE":
-                        return "known human";
-                }
+            if (json[key].flag == 1 && json[key].result === "LOSE") {
+                return "known human";
+            } else if (!strict && json[key].flag == 1 && json[key].result === "LOSE") {
+                return "known human;"
             }
         }
     }
@@ -81,9 +75,8 @@ async function checkDetector(msg) {
         method: 'GET',
         redirect: 'follow'
     };
-      
+
     let json = await fetch(DETECTOR_URL + msg, requestOptions)
                          .then(response => response.json());
     return json.fake_probability;
-        
 }

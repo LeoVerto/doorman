@@ -66,7 +66,7 @@ async function processAnswers(answers) {
                 .then(handleExisting(notes[i], "", "spells HUMAN"));
 
             // Check spacescience.tech
-            checkExistingSpacescience(answers[i].id)
+            checkExistingSpacescience(answers[i].id, false)
                 .then(result => handleExisting(notes[i], result, "spacescience.tech"));
 
             // Check ocean.rip
