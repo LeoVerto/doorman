@@ -111,8 +111,9 @@ async function submitResults() {
                 result = state === "correct" ? "WIN" : "LOSE";
             }
 
-            submitResultsFetch(chosen_text, option_texts, result);
         }
+        
+        submitResultsFetch(chosen_text, option_texts, result);
     }
 }
 
@@ -121,7 +122,9 @@ async function submitResultsFetch(chosen_text, option_texts, result) {
     myHeaders.append("Content-Type", "application/json");
 
     var raw = JSON.stringify({"chosen_text": chosen_text, option_texts, "result": result});
-    console.log("raw: ", {"chosen_text": chosen_text, option_texts, "result": result});
+    // console.log("raw: ", {"chosen_text": chosen_text, option_texts, "result": result});
+    // console.log(option_texts);
+    // window.alert("raw: ", {"chosen_text": chosen_text, option_texts, "result": result});
 
     var requestOptions = {
         method: 'POST',
