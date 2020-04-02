@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      0.9
+// @version      1.0
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM.xmlHttpRequest
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=0.9
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.0
 // ==/UserScript==
 
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
@@ -60,6 +60,10 @@ async function processAnswers(answers) {
                 await handleExisting(notes[i], results[i], "abra.me, own db");
                 continue;
             }
+
+            // Check if the message is a backronym
+            checkBackronym(answers[i].msg)
+                .then(handleExisting(notes[i], "", "spells HUMAN"));
 
             // Check spacescience.tech
             checkExistingSpacescience(answers[i].id)
