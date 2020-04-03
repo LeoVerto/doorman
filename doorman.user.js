@@ -1,21 +1,44 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.2
+// @version      1.3
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.2
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.3
 // ==/UserScript==
 
-const VERSION = "1.2";
+const VERSION = "1.3";
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
 const SUBMIT_SPACESCIENCE_URL = "https://spacescience.tech/api.php";
 
-function setHint(note, text, overwriteable=false) {
+function setState(note, hint, state) {
+    if (state === "") {
+        return;
+    }
+
+    // State conflict
+    if (hint.hasAttribute("state") && hint.getAttribute("state") !== state) {
+        state = "conflict";
+    }
+
+    if (state === "bot") {
+        note.setAttribute("style", "background-color: green;");
+    } else if (state === "human") {
+        note.setAttribute("style", "background-color: darkred;");
+    // State conflict
+    } else {
+        note.setAttribute("style", "background-color: orange;");
+        hint.textContent("Database conflict!");
+    }
+
+    hint.setAttribute("state", state);
+}
+
+function setHint(note, text, state="", overwriteable=false) {
     let hint = note.getElementsByClassName("doorman-hint")[0];
 
     // Hint tag does not already exist
@@ -28,13 +51,22 @@ function setHint(note, text, overwriteable=false) {
             hint.setAttribute("overwriteable", "");
         }
 
+        setState(note, hint, state);
+
         note.appendChild(hint);
         hint.textContent = text;
 
     // Only overwrite if previously set as overwriteable
     } else if (hint.hasAttribute("overwriteable")) {
         hint.textContent = text;
+        setState(note, hint, state);
     }
+    /*// Add to message
+    } else {
+        let regex = /\(.*\)/
+        hint.textContent = `(${regex.exec(hint.textContent)}, ${text})`;
+        setState(note, hint, state);
+    }*/
 }
 
 function getAnswers() {
@@ -82,26 +114,45 @@ async function processAnswers(answers) {
         await Promise.all(promises.map(p => p.catch(e => e)))
             .catch(e => console.log(e));
 
+        let bot_answers = [];
         let unknown_answers = [];
+        let conflicts = false;
         for (let note of notes) {
             // If note hint is not set
-            if (!note.getElementsByClassName("doorman-hint")[0]) {
+            let hint = note.getElementsByClassName("doorman-hint")[0];
+            if (!hint) {
                 unknown_answers.push(note);
+            } else if (hint.getAttribute("state") === "bot") {
+                bot_answers.push(note);
+            } else if (hint.getAttribute("state") === "conflict") {
+                conflicts = true;
             }
         }
         console.log(unknown_answers.length + " unknown answers left.");
 
-        // Autoclick submit
-        if (unknown_answers.length == 1 && GM_getValue("autoclick", false)) {
-            unknown_answers[0].click();
+        // Autoclicker
+        if (GM_getValue("autoclick", false) && !conflicts) {
+            // Click known bot answer
+            if (bot_answers.length > 0) {
+                bot_answers[0].clock();
+                return;
+
+            // Click unknown answer
+            } else if (unknown_answers.length == 1) {
+                unknown_answers[0].click();
+                return;
+            }
+        }
 
         // Only check detector when there's more than one unknown answer left
-        } else if (unknown_answers.length > 1){
+        if (unknown_answers.length > 1){
             // Check detector
             for (let i = 0; i < notes.length; i++) {
-                checkDetector(answers[i].msg)
-                    .catch(error => console.log('error', error))
-                    .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", true));
+                if (unknown_answers.includes(notes[i])) {
+                    checkDetector(answers[i].msg)
+                        .catch(error => console.log('error', error))
+                        .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", "", true));
+                }
             }
         }
     }
@@ -109,11 +160,9 @@ async function processAnswers(answers) {
 
 async function handleExisting(note, result, source) {
     if (result === "known fake") {
-        setHint(note, result + " (" + source + ")");
-        note.setAttribute("style", "background-color: green;")
+        setHint(note, result + " (" + source + ")", "bot");
     } else if (result === "known human") {
-        setHint(note, result + " (" + source + ")");
-        note.setAttribute("style", "background-color: darkred;")
+        setHint(note, result + " (" + source + ")", "human");
     }
 }
 
