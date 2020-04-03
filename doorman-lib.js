@@ -41,8 +41,8 @@ async function checkExistingSpacescience(id, strict=true, threshold=1) {
         if (json[key].hasOwnProperty("flag") && json[key].flag == 1) {
             if (json[key].result === "LOSE") {
                 lose_count++;
-            } else if (!strict && json[key].result === "LOSE") {
-                lose_count++;
+            /*} else if (!strict && json[key].result === "LOSE") {
+                lose_count++;*/
             } else if (json[key].result === "WIN") {
                 win_count++;
             }
