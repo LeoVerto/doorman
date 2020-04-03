@@ -25,7 +25,7 @@ async function checkExistingAbra(msgs) {
     return json.results;
 }
 
-async function checkExistingSpacescience(id, strict=True) {
+async function checkExistingSpacescience(id, strict=true) {
     let requestOptions = {
         method: 'GET',
         redirect: 'follow'
