@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.1
+// @version      1.2
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.1
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.2
 // ==/UserScript==
 
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
@@ -81,17 +81,21 @@ async function processAnswers(answers) {
         await Promise.all(promises.map(p => p.catch(e => e)))
             .catch(e => console.log(e));
 
-        let unknown_count = 0;
+        let unknown_answers = [];
         for (let note of notes) {
             // If note hint is not set
             if (!note.getElementsByClassName("doorman-hint")[0]) {
-                unknown_count++;
+                unknown_answers.push(note);
             }
         }
-        console.log(unknown_count + " unknown answers left.");
+        console.log(unknown_answers.length + " unknown answers left.");
+
+        // Autoclick submit
+        if (unknown_answers.length == 1 && GM_getValue("autoclick", false)) {
+            unknown_answers[0].click();
 
         // Only check detector when there's more than one unknown answer left
-        if (unknown_count > 1){
+        } else if (unknown_answers.length > 1){
             // Check detector
             for (let i = 0; i < notes.length; i++) {
                 checkDetector(answers[i].msg)
@@ -177,13 +181,11 @@ async function submitResultsSpacescience(answer, result, options) {
 
 function handleGremlinAction(e) {
     const type = e.detail.type;
-    console.log(type);
     switch (type) {
         case "begin":
             console.log("begin");
             break;
         case "link":
-            // We don't want to handle this when a new round is started
             if (!window.location.href.startsWith("https://gremlins-api.reddit.com/results")) {
                 // We have to wait a bit for reddit to get the results but after 300ms they redirect us
                 console.log("Submitting results in 250ms");
@@ -195,13 +197,43 @@ function handleGremlinAction(e) {
     }
 }
 
+async function addMenu(app) {
+    let html = `
+        <p style="float: right; margin-top: 0;">Doorman 1.0</p>
+        <input type="checkbox" id="doorman-autoclick">
+        <label for="doorman-autoclick">Enable Doorman autoclicker</label>
+    `
+    let div = document.createElement("div");
+    div.setAttribute("id", "doorman-options");
+    div.innerHTML = html;
+    app.appendChild(div);
+
+    let checkbox = document.getElementById("doorman-autoclick");
+    checkbox.checked = GM_getValue("autoclick", false);
+    checkbox.addEventListener("change", function () {
+        GM_setValue("autoclick", this.checked);
+    });
+}
+
 function run() {
     var app = document.getElementsByTagName("gremlin-app")[0];
     if (app) {
+        addMenu(app);
         var answers = getAnswers();
         console.log(answers);
         processAnswers(answers);
         app.addEventListener("gremlin-action", handleGremlinAction);
+
+        // Autoclick "Keep Going!" if we're on the results page
+        if (window.location.href.startsWith("https://gremlins-api.reddit.com/results")) {
+            if (GM_getValue("autoclick", false)) {
+                for (let a of app.getElementsByTagName("a")) {
+                    if (a.textContent === "Keep Going!") {
+                        a.click();
+                    }
+                }
+            }
+        }
     }
 }
 
