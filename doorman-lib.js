@@ -57,8 +57,6 @@ async function checkExistingOcean(msg) {
     let json = await fetch(OCEAN_URL+msg, requestOptions)
                          .then(response => response.json());
 
-    console.log(json);
-
     if (json.status=200) {
         if (json.answer.is_correct) {
             return "known fake";
