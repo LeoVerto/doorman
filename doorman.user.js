@@ -11,6 +11,7 @@
 // @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.2
 // ==/UserScript==
 
+const VERSION = "1.2";
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
 const SUBMIT_SPACESCIENCE_URL = "https://spacescience.tech/api.php";
 
@@ -199,7 +200,7 @@ function handleGremlinAction(e) {
 
 async function addMenu(app) {
     let html = `
-        <p style="float: right; margin-top: 0;">Doorman 1.0</p>
+        <p style="float: right; margin-top: 0;">Doorman ${VERSION}</p>
         <input type="checkbox" id="doorman-autoclick">
         <label for="doorman-autoclick">Enable Doorman autoclicker</label>
     `
