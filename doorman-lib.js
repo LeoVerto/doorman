@@ -34,8 +34,6 @@ async function checkExistingSpacescience(id, strict=true) {
     let json = await fetch(SPACESCIENCE_URL+id, requestOptions)
                          .then(response => response.json());
 
-    console.log(json);
-
     for (let key in json) {
         if (json[key].hasOwnProperty("flag")) {
             if (json[key].flag == 1 && json[key].result === "LOSE") {
@@ -56,8 +54,6 @@ async function checkExistingOcean(msg) {
 
     let json = await fetch(OCEAN_URL+msg, requestOptions)
                          .then(response => response.json());
-
-    console.log(json);
 
     if (json.status=200) {
         if (json.answer.is_correct) {
