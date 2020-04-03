@@ -2,7 +2,7 @@ const DETECTOR_URL = "https://detector.abra.me/?";
 const ABRA_URL = "https://librarian.abra.me/check";
 const SPACESCIENCE_URL = "https://spacescience.tech/check.php";
 const OCEAN_URL = "https://wave.ocean.rip/answers/answer";
-const REPORT_URL = "http://spacescience.tech/report.php";
+const REPORT_URL = "https://spacescience.tech/report.php";
 
 async function checkBackronym(msg) {
     return msg.split(" ").map(x => x.charAt(0)).join("").startsWith("human");
