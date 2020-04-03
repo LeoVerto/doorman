@@ -1,17 +1,17 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.4
+// @version      1.5
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.4
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.5
 // ==/UserScript==
 
-const VERSION = "1.4";
+const VERSION = "1.5";
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
 const SUBMIT_SPACESCIENCE_URL = "https://spacescience.tech/api.php";
 
@@ -101,7 +101,7 @@ async function processAnswers(answers) {
                               .then(handleExisting(notes[i], "", "spells HUMAN")));
 
             // Check spacescience.tech
-            promises.push(checkExistingSpacescience(answers[i].id, false)
+            promises.push(checkExistingSpacescience(answers[i].id, false, 2)
                               .then(result => handleExisting(notes[i], result, "spacescience.tech")));
 
             // Check ocean.rip
