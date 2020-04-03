@@ -35,26 +35,30 @@ async function checkExistingSpacescience(id, strict=true, threshold=1) {
     let json = await fetch(`${SPACESCIENCE_URL}?id=${id}&scriptname=${getScriptname()}`, requestOptions)
                          .then(response => response.json());
 
-    let lose_count = 0;
-    let win_count = 0;
+    let human_count = 0;
+    let bot_count = 0;
     for (let key in json) {
-        if (json[key].hasOwnProperty("flag") && json[key].flag == 1) {
-            if (json[key].result === "LOSE") {
-                lose_count++;
-            /*} else if (!strict && json[key].result === "LOSE") {
-                lose_count++;*/
-            } else if (json[key].result === "WIN") {
-                win_count++;
+        if (json[key].hasOwnProperty("flag")) {
+            // Flag is 1
+            if (json[key].flag == 1) {
+                if (json[key].result === "LOSE") {
+                    human_count++;
+                } else if (json[key].result === "WIN") {
+                    bot_count++;
+                }
+            // Unselected answer that resulted in a win, has to be human
+            } else if (!strict && json[key].result === "WIN") {
+                human_count++;
             }
         }
     }
 
     // Conflict, bad data
-    if (lose_count > 0 && win_count > 0) {
+    if (human_count > 0 && bot_count > 0) {
         reportConflict(id, "spacescience");
-    } else if (lose_count >= threshold) {
+    } else if (human_count >= threshold) {
         return "known human";
-    } else if (lose_count > 0) {
+    } else if (human_count > 0) {
         return "maybe human";
     }
 

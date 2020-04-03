@@ -1,17 +1,17 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.6
+// @version      1.7
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.6
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.7
 // ==/UserScript==
 
-const VERSION = "1.6";
+const VERSION = "1.7";
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
 const SUBMIT_SPACESCIENCE_URL = "https://spacescience.tech/api.php";
 
@@ -73,7 +73,12 @@ function setHint(note, text, state="", overwriteable=false) {
 
 function appendHint(note, text) {
     let hint = note.getElementsByClassName("doorman-hint")[0];
-    hint.textContent += ", " + text;
+
+    if (hint) {
+        hint.textContent += ", " + text;
+    } else {
+        setHint(note, text, "", true);
+    }
 }
 
 function getAnswers() {
@@ -108,7 +113,7 @@ async function processAnswers(answers) {
                               .then(handleExisting(notes[i], "", "spells HUMAN")));
 
             // Check spacescience.tech
-            promises.push(checkExistingSpacescience(answers[i].id, false, parseInt(GM_getValue("threshold", "2")))
+            promises.push(checkExistingSpacescience(answers[i].id, GM_getValue("strict", true), GM_getValue("threshold", 2))
                               .then(result => handleExisting(notes[i], result, "spacescience.tech")));
 
             // Check ocean.rip
@@ -259,26 +264,42 @@ function handleGremlinAction(e) {
 async function addMenu(app) {
     let html = `
         <p style="float: right; margin-top: 0;">Doorman ${VERSION}</p>
-        <input type="checkbox" id="doorman-autoclick">
-        <label for="doorman-autoclick">Enable Autoclicker</label>
-        <input type="number" id="doorman-threshold" min="1" style="width: 2rem; color: black; margin-left: 5rem;"></input>
-        <label for="doorman-threshold">Report threshold</label>
+        <div style="display: inline-block;">
+            <input type="checkbox" id="doorman-autoclick">
+            <label for="doorman-autoclick">Enable Autoclicker</label>
+        </div>
+        <div style="display: inline-block;">
+            <input type="number" id="doorman-threshold" min="1" style="width: 2rem; color: black; margin-left: 5rem;"></input>
+            <label for="doorman-threshold">Report threshold</label>
+        </div>
+        <div style="display: inline-block;">
+            <input type="checkbox" id="doorman-implicit">
+            <label for="doorman-implicit">
+                Use implicit data from spacescience, increase threshold to 5 or higher if you use this.
+            </label>
+        </div>
     `
     let div = document.createElement("div");
     div.setAttribute("id", "doorman-options");
     div.innerHTML = html;
     app.appendChild(div);
 
-    let checkbox = document.getElementById("doorman-autoclick");
-    checkbox.checked = GM_getValue("autoclick", false);
-    checkbox.addEventListener("change", function () {
+    let autoclick = document.getElementById("doorman-autoclick");
+    autoclick.checked = GM_getValue("autoclick", false);
+    autoclick.addEventListener("change", function () {
         GM_setValue("autoclick", this.checked);
     });
 
+    let implicit = document.getElementById("doorman-implicit");
+    implicit.checked = !GM_getValue("strict", true);
+    implicit.addEventListener("change", function () {
+        GM_setValue("strict", !this.checked);
+    });
+
     let threshold = document.getElementById("doorman-threshold");
-    threshold.value = GM_getValue("threshold", "2");
+    threshold.value = GM_getValue("threshold", 2);
     threshold.addEventListener("change", function () {
-        GM_setValue("threshold", this.value);
+        GM_setValue("threshold", parseInt(this.value));
     });
 }
 
