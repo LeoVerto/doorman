@@ -1,4 +1,4 @@
-const DETECTOR_URL = "https://detector.abra.me/?";
+const DETECTOR_URL = "https://huggingface.co/openai-detector/?";
 const ABRA_URL = "https://librarian.abra.me/check";
 const SPACESCIENCE_URL = "https://spacescience.tech/check.php";
 const OCEAN_URL = "https://wave.ocean.rip/answers/answer";
