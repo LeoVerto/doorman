@@ -1,17 +1,17 @@
 // ==UserScript==
 // @name         Doorman - Imposter Helper
 // @namespace    https://leoverto.github.io
-// @version      1.5
+// @version      1.6
 // @author       Leo Verto
 // @include      https://gremlins-api.reddit.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
 // @updateurl    https://github.com/LeoVerto/doorman/raw/master/doorman.user.js
-// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.5
+// @require      https://github.com/LeoVerto/doorman/raw/master/doorman-lib.js?v=1.6
 // ==/UserScript==
 
-const VERSION = "1.5";
+const VERSION = "1.6";
 const SUBMIT_ABRA_URL = "https://librarian.abra.me/submit";
 const SUBMIT_SPACESCIENCE_URL = "https://spacescience.tech/api.php";
 
@@ -21,7 +21,7 @@ function setState(note, hint, state) {
     }
 
     // State conflict
-    if (hint.hasAttribute("state") && hint.getAttribute("state") !== state) {
+    if (hint.hasAttribute("state") && hint.getAttribute("state") !== state && !hint.hasAttribute("overwriteable")) {
         state = "conflict";
     }
 
@@ -29,6 +29,8 @@ function setState(note, hint, state) {
         note.setAttribute("style", "background-color: green;");
     } else if (state === "human") {
         note.setAttribute("style", "background-color: darkred;");
+    } else if (state === "maybe_human") {
+        note.setAttribute("style", "background-color: rgba(139, 00, 00, 50%);");
     // State conflict
     } else {
         note.setAttribute("style", "background-color: orange;");
@@ -69,6 +71,11 @@ function setHint(note, text, state="", overwriteable=false) {
     }*/
 }
 
+function appendHint(note, text) {
+    let hint = note.getElementsByClassName("doorman-hint")[0];
+    hint.textContent += ", " + text;
+}
+
 function getAnswers() {
     var notes = document.getElementsByTagName("gremlin-note");
 
@@ -101,7 +108,7 @@ async function processAnswers(answers) {
                               .then(handleExisting(notes[i], "", "spells HUMAN")));
 
             // Check spacescience.tech
-            promises.push(checkExistingSpacescience(answers[i].id, false, 2)
+            promises.push(checkExistingSpacescience(answers[i].id, false, parseInt(GM_getValue("threshold", "2")))
                               .then(result => handleExisting(notes[i], result, "spacescience.tech")));
 
             // Check ocean.rip
@@ -120,7 +127,7 @@ async function processAnswers(answers) {
         for (let note of notes) {
             // If note hint is not set
             let hint = note.getElementsByClassName("doorman-hint")[0];
-            if (!hint) {
+            if (!hint || hint.getAttribute("state") === "maybe_human") {
                 unknown_answers.push(note);
             } else if (hint.getAttribute("state") === "bot") {
                 bot_answers.push(note);
@@ -151,7 +158,7 @@ async function processAnswers(answers) {
                 if (unknown_answers.includes(notes[i])) {
                     checkDetector(answers[i].msg)
                         .catch(error => console.log('error', error))
-                        .then(percentage => setHint(notes[i], Math.round(Number(percentage)*100)+"% bot", "", true));
+                        .then(percentage => appendHint(notes[i], Math.round(Number(percentage)*100)+"% bot"));
                 }
             }
         }
@@ -160,9 +167,11 @@ async function processAnswers(answers) {
 
 async function handleExisting(note, result, source) {
     if (result === "known fake") {
-        setHint(note, result + " (" + source + ")", "bot");
+        setHint(note, `${result} (${source})`, "bot");
     } else if (result === "known human") {
-        setHint(note, result + " (" + source + ")", "human");
+        setHint(note, `${result} (${source})`, "human");
+    } else if (result === "maybe human") {
+        setHint(note, `below threshold (${source})`, "maybe_human", true)
     }
 }
 
@@ -251,7 +260,9 @@ async function addMenu(app) {
     let html = `
         <p style="float: right; margin-top: 0;">Doorman ${VERSION}</p>
         <input type="checkbox" id="doorman-autoclick">
-        <label for="doorman-autoclick">Enable Doorman autoclicker</label>
+        <label for="doorman-autoclick">Enable Autoclicker</label>
+        <input type="number" id="doorman-threshold" min="1" style="width: 2rem; color: black; margin-left: 5rem;"></input>
+        <label for="doorman-threshold">Report threshold</label>
     `
     let div = document.createElement("div");
     div.setAttribute("id", "doorman-options");
@@ -262,6 +273,12 @@ async function addMenu(app) {
     checkbox.checked = GM_getValue("autoclick", false);
     checkbox.addEventListener("change", function () {
         GM_setValue("autoclick", this.checked);
+    });
+
+    let threshold = document.getElementById("doorman-threshold");
+    threshold.value = GM_getValue("threshold", "2");
+    threshold.addEventListener("change", function () {
+        GM_setValue("threshold", this.value);
     });
 }
 

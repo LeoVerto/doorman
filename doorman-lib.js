@@ -54,6 +54,8 @@ async function checkExistingSpacescience(id, strict=true, threshold=1) {
         reportConflict(id, "spacescience");
     } else if (lose_count >= threshold) {
         return "known human";
+    } else if (lose_count > 0) {
+        return "maybe human";
     }
 
 
