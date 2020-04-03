@@ -134,7 +134,7 @@ async function processAnswers(answers) {
         if (GM_getValue("autoclick", false) && !conflicts) {
             // Click known bot answer
             if (bot_answers.length > 0) {
-                bot_answers[0].clock();
+                bot_answers[0].click();
                 return;
 
             // Click unknown answer
